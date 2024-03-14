@@ -1,8 +1,8 @@
 let
     // configurations start
     Today=Date.From(DateTime.LocalNow()), // today's date
-    FromYear = 2018, // set the start year of the date dimension. dates start from 1st of January of this year
-    ToYear=2021, // set the end year of the date dimension. dates end at 31st of December of this year
+    FromYear = 2020, // set the start year of the date dimension. dates start from 1st of January of this year
+    ToYear=2025, // set the end year of the date dimension. dates end at 31st of December of this year
     StartofFiscalYear=7, // set the month number that is start of the financial year. example; if fiscal year start is July, value is 7
     firstDayofWeek=Day.Monday, // set the week's start day, values: Day.Monday, Day.Sunday....
     // configuration end
@@ -56,9 +56,11 @@ let
     #"Changed Type3" = Table.TransformColumnTypes(#"Added Custom2",{{"Year Offset", Int64.Type}}),
     #"Added Custom3" = Table.AddColumn(#"Changed Type3", "Quarter Offset", each (([Year]-Date.Year(Today))*4)
 +([Quarter]-Date.QuarterOfYear(Today))),
+
     #"Changed Type4" = Table.TransformColumnTypes(#"Added Custom3",{{"Quarter Offset", Int64.Type}}),
     #"Added Custom4" = Table.AddColumn(#"Changed Type4", "Year-Month", each Date.ToText([Date],"MMM yyyy")),
-    #"Added Custom5" = Table.AddColumn(#"Added Custom4", "Year-Month Code", each Date.ToText([Date],"yyyyMM")),
+      #"Add Week Offset" = Table.AddColumn(#"Added Custom4", "Week Offset", each ( Number.From( Date.StartOfWeek( [Date], Day.Sunday) )- Number.From( Date.StartOfWeek( Today, Day.Sunday ) ) ) / 7, Int64.Type),
+    #"Added Custom5" = Table.AddColumn(#"Add Week Offset", "Year-Month Code", each Date.ToText([Date],"yyyyMM")),
     #"Changed Type5" = Table.TransformColumnTypes(#"Added Custom5",{{"Year-Month", type text}, {"Year-Month Code", Int64.Type}})
 in
     #"Changed Type5"
