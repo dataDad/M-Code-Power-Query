@@ -58,9 +58,9 @@ let
 +([Quarter]-Date.QuarterOfYear(Today))),
 
     #"Changed Type4" = Table.TransformColumnTypes(#"Added Custom3",{{"Quarter Offset", Int64.Type}}),
-    #"Added Custom4" = Table.AddColumn(#"Changed Type4", "Year-Month", each Date.ToText([Date],"MMM yyyy")),
+    #"Added Custom4" = Table.AddColumn(#"Changed Type4", "Month-Year", each Date.ToText([Date],"MMM-yy")),
       #"Add Week Offset" = Table.AddColumn(#"Added Custom4", "Week Offset", each ( Number.From( Date.StartOfWeek( [Date], Day.Sunday) )- Number.From( Date.StartOfWeek( Today, Day.Sunday ) ) ) / 7, Int64.Type),
-    #"Added Custom5" = Table.AddColumn(#"Add Week Offset", "Year-Month Code", each Date.ToText([Date],"yyyyMM")),
-    #"Changed Type5" = Table.TransformColumnTypes(#"Added Custom5",{{"Year-Month", type text}, {"Year-Month Code", Int64.Type}})
+    #"Added Custom5" = Table.AddColumn(#"Add Week Offset", "Month-Year Code", each Date.ToText([Date],"yyyyMM")),
+    #"Changed Type5" = Table.TransformColumnTypes(#"Added Custom5",{{"Month-Year", type text}, {"Month-Year Code", Int64.Type}})
 in
     #"Changed Type5"
