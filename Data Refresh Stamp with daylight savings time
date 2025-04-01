@@ -1,0 +1,46 @@
+let
+    // Get the current UTC time
+    CurrentDateTimeUTC = DateTimeZone.UtcNow(),
+
+    // Define Central Standard Time offset (UTC-6) and Central Daylight Time offset (UTC-5)
+    StandardTimeOffset = #duration(0, -6, 0, 0), // CST (UTC-6)
+    DSTOffset = #duration(0, -5, 0, 0), // CDT (UTC-5)
+
+    // Extract the current date
+    CurrentDate = Date.From(CurrentDateTimeUTC),
+
+    // Get the current year
+    Year = Date.Year(CurrentDate),
+
+    // Calculate DST start (Second Sunday of March at 2 AM CST)
+    MarchStart = #date(Year, 3, 1),
+    DSTStartDate = List.Max(
+        List.Transform(
+            {0..6}, 
+            each Date.StartOfWeek(MarchStart + _ * #duration(1, 0, 0, 0), Day.Sunday)
+        )
+    ),
+    DSTStart = #datetime(Year, 3, Date.Day(DSTStartDate), 2, 0, 0), // Convert to DateTime
+
+    // Calculate DST end (First Sunday of November at 2 AM CDT)
+    NovemberStart = #date(Year, 11, 1),
+    DSTEndDate = Date.StartOfWeek(NovemberStart, Day.Sunday),
+    DSTEnd = #datetime(Year, 11, Date.Day(DSTEndDate), 2, 0, 0), // Convert to DateTime
+
+    // Convert CurrentDateTimeUTC to DateTime type for comparison
+    CurrentDateTime = DateTime.From(CurrentDateTimeUTC),
+
+    // Determine if we are in DST
+    IsDaylightSavings = CurrentDateTime >= DSTStart and CurrentDateTime < DSTEnd,
+
+    // Apply the correct offset based on DST status
+    LocalDateTime = if IsDaylightSavings then CurrentDateTimeUTC + DSTOffset else CurrentDateTimeUTC + StandardTimeOffset,
+
+    // Convert to local time zone format
+    RefreshDateTime = DateTimeZone.RemoveZone(LocalDateTime),
+    #"Converted to Table" = #table(1, {{RefreshDateTime}}),
+    #"Added Custom" = Table.AddColumn(#"Converted to Table", "Custom", each "Data as of " & DateTime.ToText([Column1],"MMM-dd-yyyy HH:mm")&" CST"),
+    #"Removed Columns" = Table.RemoveColumns(#"Added Custom",{"Column1"}),
+    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"Custom", "Refresh Time"}})
+in
+    #"Renamed Columns"
